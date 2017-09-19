@@ -7,7 +7,7 @@ def init(figure_number=1, XKCD=False):
     if XKCD is True: plt.xkcd()
     plt.figure(figure_number)
 
-def set_subplot(subplot_number, func, begin, end, step=1,
+def set_subplot(subplot_number, y_arr, begin, end, step=1,
                 xmin=None, xmax=None, ymin=None, ymax=None,
                 grid=True, subplot_x_number=2, subplot_y_number=2,
                 xlabel = None, ylabel = None, xticks = None, yticks = None,
@@ -22,7 +22,7 @@ def set_subplot(subplot_number, func, begin, end, step=1,
     if yticks is not None: plt.yticks(yticks[0], yticks[1])
 
     x_ar = pylab.frange(begin, end, step)
-    plt.plot(x_ar, [func(x) for x in x_ar])
+    plt.plot(x_ar, y_arr)
 
     for point in text_points:
         plt.text(point[0], point[1], point[2])
