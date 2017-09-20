@@ -48,6 +48,7 @@ def variance(arr):
 def sqrt_variance(arr):
     """
     Calculates sqrt of variance of values in array
+
     :param arr: array of values
     :return: square root of variance
     """
@@ -78,7 +79,7 @@ def skewness(arr):
 
 def kurtosis(arr):
     """
-    Calculates kurtosis (exscess coeff) for fuinction's values
+    Calculates kurtosis (exscess coeff) for function's values
 
     :param arr: array of values
     :return: kurtosis value
@@ -93,15 +94,27 @@ def density(arr, M):
     :param M: number of intervals
     :return: array of intervals (len(arr) = M) with number of values in each interval
     """
-    raise NotImplementedError
+
+    lMax = max(arr)
+    lMin = min(arr)
+    divisor = (lMax - lMin) / M
+    ans = [0] * M
+
+    # Increment element in list that corresponds to given value in range [lMin, lMax]
+    for i in arr:
+        ans[int(math.floor((i - lMin) / divisor))] += 1
+
+    # Divide each element by arr length in order to get probability
+    return [i / len(arr) for i in ans]
+
 
 def autocorrelation(arr, lag):
     """
-    Calculates autocorrelation value for given lag for function f(x)
+    Calculates auto-correlation value for given lag for function f(x)
 
     :param arr: array of values
-    :param lag: lag for autocorrelation (value from 0 to N-1)
-    :return: autocorrelation value for given lag for values in array
+    :param lag: lag for auto-correlation (value from 0 to N-1)
+    :return: auto-correlation value for given lag for values in array
     """
     raise NotImplementedError
 
