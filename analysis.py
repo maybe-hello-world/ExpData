@@ -18,6 +18,7 @@ def mean(arr):
 def square_mean(arr):
     """
     Returns squared mean (not mean^2, but sum of i^2)
+
     :param arr: array of values
     :return: squared mean value
     """
@@ -92,7 +93,7 @@ def density(arr, M):
     :param M: number of intervals
     :return: array of intervals (len(arr) = M) with number of values in each interval
     """
-    return NotImplementedError
+    raise NotImplementedError
 
 def autocorrelation(arr, lag):
     """
@@ -102,7 +103,7 @@ def autocorrelation(arr, lag):
     :param lag: lag for autocorrelation (value from 0 to N-1)
     :return: autocorrelation value for given lag for values in array
     """
-    return NotImplementedError
+    raise NotImplementedError
 
 def crosscorrelation(arr_f, arr_g, lag):
     """
@@ -113,4 +114,4 @@ def crosscorrelation(arr_f, arr_g, lag):
     :param lag: lag for correlation (value from 0 to N-1)
     :return: cross-correlation value for given lag and given functions
     """
-    return NotImplementedError
+    raise NotImplementedError
