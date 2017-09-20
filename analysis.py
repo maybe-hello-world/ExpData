@@ -116,7 +116,14 @@ def autocorrelation(arr, lag):
     :param lag: lag for auto-correlation (value from 0 to N-1)
     :return: auto-correlation value for given lag for values in array
     """
-    raise NotImplementedError
+    avg = mean(arr)
+    lSum = 0
+    for i in range(0, len(arr) - lag - 1):
+        lSum += (arr[i] - avg) * (arr[i + lag] - avg)
+
+    return lSum / (len(arr) - lag)
+
+
 
 def crosscorrelation(arr_f, arr_g, lag):
     """
@@ -127,4 +134,13 @@ def crosscorrelation(arr_f, arr_g, lag):
     :param lag: lag for correlation (value from 0 to N-1)
     :return: cross-correlation value for given lag and given functions
     """
-    raise NotImplementedError
+    if len(arr_f) != len(arr_g):
+        raise ValueError("Lengths of function arrays are different")
+
+    avg_f = mean(arr_f)
+    avg_g = mean(arr_g)
+    lSum = 0
+    for i in range(0, len(arr_f) - lag - 1):
+        lSum += (arr_f[i] - avg_f) * (arr_g[i + lag] - avg_g)
+
+    return lSum / (len(arr_f) - lag)
