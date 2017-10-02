@@ -30,5 +30,5 @@ class PRNG:
 		"""
 		if left > right: raise ValueError("Left boundary must be <= right")
 
-		self.prev = ((self.prev*148878.553) % 100) / 100
-		return left + self.prev * (right - left)
+		self.prev = self.prev*148878.553 % 1000000
+		return left + ((self.prev % 100) / 100) * (right - left)
