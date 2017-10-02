@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-axs = []
+axs = {}
 
 def init(figure_number=1, XKCD=False):
 	if XKCD is True: plt.xkcd()
@@ -37,6 +37,8 @@ def set_subplot(subplot_number, y_arr, x_arr,
 	:param bar: Bool param if bars or graph is needed
 	:return: Nothing
 	"""
+	global axs
+
 	axs[subplot_number - 1] = plt.subplot(subplot_x_number, subplot_y_number, subplot_number)
 
 	if xmin is not None and xmax is not None: axs[subplot_number - 1].set_xlim([xmin, xmax])
