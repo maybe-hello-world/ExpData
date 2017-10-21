@@ -1,5 +1,8 @@
 """
-Yeah, it's forbidden to use built-in function or packages
+Module for analysis of arrays of values (mean, variance, etc.)
+
+This module realize functions for array analysis like mean, square_mean, RMS etc.
+Yeah, it's forbidden to use built-in functions
 """
 import math
 
