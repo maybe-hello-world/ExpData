@@ -3,7 +3,7 @@ Simple module that contains linear, exponential and complex function realization
 """
 import math
 
-def linear(a: float, b: float) -> function:
+def linear(a: float, b: float):
 	"""
 	Create linear function a*x + b
 
@@ -13,7 +13,7 @@ def linear(a: float, b: float) -> function:
 	"""
 	return lambda x: a*x + b
 
-def exp(a: float, b: float) -> function:
+def exp(a: float, b: float):
 	"""
 	Create exponential function  b * (math.e ^ (-a * x))
 
