@@ -19,7 +19,7 @@ class PRNG:
 			self.prev = math.fabs(seed)
 
 
-	def next(self, left = 0, right = 1):
+	def next(self, left = 0, right = 1) -> float:
 		"""
 		Get next pseudorandom value
 
@@ -32,3 +32,14 @@ class PRNG:
 
 		self.prev = self.prev*148878.553 % 1000000
 		return left + ((self.prev % 100) / 100) * (right - left)
+
+	def uniform(self, left = 0, right = 1) -> float:
+		"""
+		Get next pseudorandom value
+
+		:param left: left boundary of possible values
+		:param right: right boundary of possible values (does not include value itself)
+		:return: pseudorandom float number in [left; right)
+		:raise ValueError
+		"""
+		return self.next(left=left, right=right)
