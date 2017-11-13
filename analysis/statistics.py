@@ -14,6 +14,9 @@ def mean(arr) -> float:
 	:param arr: array of values
 	:return: average value
 	"""
+	if len(arr) == 0:
+		return 0
+
 	sm = 0
 	for i in arr:
 		sm += i
@@ -42,9 +45,19 @@ def root_mean_square(arr) -> float:
 	"""
 	return math.sqrt(square_mean(arr))
 
+def std(arr) -> float:
+	"""
+		Calculates standard deviation of values in array (also dispersion)
+
+		:rtype: float
+		:param arr: array of values
+		:return: dispersion value for the array
+		"""
+	return variance(arr)
+
 def variance(arr) -> float:
 	"""
-	Calculates dispersion of values in array
+	Calculates dispersion of values in array (also standard deviation)
 
 	:rtype: float
 	:param arr: array of values
