@@ -4,7 +4,6 @@ Some data preprocessing functions
 from analysis.statistics import mean, std
 import math
 
-
 def normalize(arr) -> None:
 	"""
 	Normalize data in given array
@@ -84,3 +83,95 @@ def anti_trend(arr, window_width = None) -> None:
 	for x in range(window_width * counter, len(arr)):
 		arr[x] -= mean_v
 
+def LPF(Fcut: float, dT: float, m: int = 64) -> list:
+	"""
+	Low-Pass Filter realization
+
+	:param Fcut: cutting frequency (all frequencies before this value will be cut)
+	:param dT: step of discretization
+	:param m: length of filter array (bigger value - more accurate but calculations are slower)
+	:return: list of values of filter function
+	"""
+
+	# Constant list of Potter 310 window
+	d = [0.35577019,
+	     0.2436983,
+	     0.07211497,
+	     0.00630165]
+
+	# Create array
+	lpw = [0] * (m + 1)
+
+	# Some magic here
+	arg = 2 * Fcut * dT
+	lpw[0] = arg
+	arg *= math.pi
+	for i in range(1, m + 1):
+		lpw[i] = math.sin(arg * i) / (math.pi * i)
+
+	# make trapezoid:
+	lpw[-1] /= 2
+
+	# Potter's window P310
+	sumg = lpw[0]
+	for i in range(1, m + 1):
+		_sum = d[0]
+		arg = math.pi * i / m
+		for k in range(1, 4):
+			_sum += 2 * d[k] * math.cos(arg * k)
+		lpw[i] *= _sum
+		sumg += 2 * lpw[i]
+
+	# normalization
+	for i in range(m + 1):
+		lpw[i] /= sumg
+
+	# mirror related to 0
+	answer = lpw[::-1]
+	answer.extend(lpw[1:])
+	return answer
+
+def HPF(Fcut: float, dT: float, m: int = 64) -> list:
+	lpw = LPF(Fcut=Fcut, dT=dT, m=m)
+
+	for k in range(len(lpw)):
+		lpw[k] *= -1
+
+	lpw[m] = 1 + lpw[m]
+
+	# for k in range(2*m + 1):
+	# 	if k == m:
+	# 		hpw[k] = 1 - lpw[k]
+	# 	else:
+	# 		hpw[k] = -lpw[k]
+
+	return lpw
+
+def BPF(Fcut1: float, Fcut2: float, dT: float, m: int = 64) -> list:
+	"""
+	Band-pass filter
+
+	:param Fcut1:
+	:param Fcut2:
+	:param dT:
+	:param m:
+	:return:
+	"""
+	lpw1 = LPF(Fcut=Fcut1, dT=dT, m=m)
+	lpw2 = LPF(Fcut=Fcut2, dT=dT, m=m)
+
+	for k in range(len(lpw1)):
+		lpw1[k] = lpw2[k] - lpw1[k]
+
+	return lpw1
+
+def BSF(Fcut1: float, Fcut2: float, dT: float, m: int = 64) -> list:
+	lpw1 = LPF(Fcut=Fcut1, dT=dT, m=m)
+	lpw2 = LPF(Fcut=Fcut2, dT=dT, m=m)
+
+	for k in range(len(lpw1)):
+		lpw1[k] = lpw1[k] - lpw2[k]
+
+	lpw1[m] += 1
+
+	return lpw1
