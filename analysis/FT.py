@@ -8,7 +8,15 @@ import math
 class FT_result:
 	"""
 	Class that contains result of Fourier transformation over some function at some range
+
+	Attributes:
+		frequencies     Values of frequencies
+		Re              Values of real part (cosinus basis)
+		Im              Values of imaginary part (sinus basis)
+		deltaF          Multiplicator for x axis for frequencies
+		borderF         Maximum frequency that can be found
 	"""
+
 	frequencies: list
 	Re: list
 	Im: list
