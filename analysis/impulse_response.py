@@ -8,12 +8,13 @@ def process(x_values, h_values) -> list:
 
 	:param x_values: input function values list
 	:param h_values: delta function values list
-	:return: list of generated impulse response values
+	:return: list of generated impulse response values. Do not forget to exclude extra values
 	"""
 	N = len(x_values)
+	m = len(h_values)
 
 	answer = []
-	for k in range(N):
+	for k in range(N + m):
 		answer.append(__step(x_values, h_values, k))
 
 	return answer
@@ -31,9 +32,8 @@ def __step(x_values, h_values, step_number: int) -> float:
 	M = len(h_values)
 	N = len(x_values)
 
-	upper_b = M if step_number > M else step_number
-	lower_b = 0 if step_number - N < 0 else step_number
+	for l in range(M):
+		if step_number >= l and step_number - l < N:
+			Y_k += x_values[step_number - l] * h_values[l]
 
-	for l in range(lower_b, upper_b):
-		Y_k += x_values[step_number - l] * h_values[l]
 	return Y_k
