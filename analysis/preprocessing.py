@@ -83,7 +83,7 @@ def anti_trend(arr, window_width = None) -> None:
 	for x in range(window_width * counter, len(arr)):
 		arr[x] -= mean_v
 
-def LPF(Fcut: float, dT: float, m: int = 64) -> list:
+def LPF(Fcut: float, dT: float, m: int = 32) -> list:
 	"""
 	Low-Pass Filter realization
 
@@ -131,7 +131,7 @@ def LPF(Fcut: float, dT: float, m: int = 64) -> list:
 	answer.extend(lpw[1:])
 	return answer
 
-def HPF(Fcut: float, dT: float, m: int = 64) -> list:
+def HPF(Fcut: float, dT: float, m: int = 32) -> list:
 	lpw = LPF(Fcut=Fcut, dT=dT, m=m)
 
 	for k in range(len(lpw)):
@@ -139,15 +139,9 @@ def HPF(Fcut: float, dT: float, m: int = 64) -> list:
 
 	lpw[m] = 1 + lpw[m]
 
-	# for k in range(2*m + 1):
-	# 	if k == m:
-	# 		hpw[k] = 1 - lpw[k]
-	# 	else:
-	# 		hpw[k] = -lpw[k]
-
 	return lpw
 
-def BPF(Fcut1: float, Fcut2: float, dT: float, m: int = 64) -> list:
+def BPF(Fcut1: float, Fcut2: float, dT: float, m: int = 32) -> list:
 	"""
 	Band-pass filter
 
@@ -165,7 +159,7 @@ def BPF(Fcut1: float, Fcut2: float, dT: float, m: int = 64) -> list:
 
 	return lpw1
 
-def BSF(Fcut1: float, Fcut2: float, dT: float, m: int = 64) -> list:
+def BSF(Fcut1: float, Fcut2: float, dT: float, m: int = 32) -> list:
 	lpw1 = LPF(Fcut=Fcut1, dT=dT, m=m)
 	lpw2 = LPF(Fcut=Fcut2, dT=dT, m=m)
 
