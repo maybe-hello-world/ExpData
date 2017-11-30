@@ -3,6 +3,7 @@ Some data preprocessing functions
 """
 from analysis.statistics import mean, std
 import math
+import struct
 
 def normalize(arr) -> None:
 	"""
@@ -16,6 +17,7 @@ def normalize(arr) -> None:
 
 	for i in range(len(arr)):
 		arr[i] = (arr[i] - minX) / diff
+
 
 def normalize_max(arr) -> None:
 	"""
@@ -32,6 +34,7 @@ def normalize_max(arr) -> None:
 	for i in range(len(arr)):
 		arr[i] = arr[i] / maxX
 
+
 def anti_shift(arr) -> None:
 	"""
 	Shift data to zero mean
@@ -42,16 +45,18 @@ def anti_shift(arr) -> None:
 	for i in range(len(arr)):
 		arr[i] -= m
 
-def anti_spike(arr) -> None:
+
+def anti_spike(arr, K: int = 4) -> None:
 	"""
-	Delete spikes that are more than mean + 4 sigmas
+	Delete spikes that are more than mean + K sigmas
 
 	:param arr: array of data with spikes
+	:param K: sigma multiplicator (lesser K - lesser border value for spike detecor - smoother output)
 	"""
 	avg = mean(arr)
 	sigma = std(arr)
 	for x in range(len(arr)):
-		if math.fabs(arr[x]) > avg + 4 * sigma:
+		if math.fabs(arr[x]) > avg + K * sigma:
 			if x == 0:
 				arr[x] = (arr[x + 1] + arr[x + 2]) / 2
 			elif x == len(arr) - 1:
@@ -59,7 +64,8 @@ def anti_spike(arr) -> None:
 			else:
 				arr[x] = (arr[x-1] + arr[x + 1]) / 2
 
-def anti_trend(arr, window_width = None) -> None:
+
+def anti_trend(arr, window_width: int = None) -> None:
 	"""
 	Use floating window to remove trends from data
 
@@ -82,6 +88,21 @@ def anti_trend(arr, window_width = None) -> None:
 	mean_v = mean(arr[window_width * counter:])
 	for x in range(window_width * counter, len(arr)):
 		arr[x] -= mean_v
+
+
+def bin2float(filepath: str, length: int) -> tuple:
+	"""
+	Read (length) floats from raw byte file and return tuple of them
+
+	:param filepath: path to binary file
+	:param length: number of floats inside (each float is 32-bit number)
+	:return: tuple with floats
+	"""
+	with open(filepath, 'rb') as f:
+		ans = struct.unpack(str(length) + "f", f.read())
+
+	return ans
+
 
 def LPF(Fcut: float, dT: float, m: int = 32) -> list:
 	"""
@@ -131,6 +152,7 @@ def LPF(Fcut: float, dT: float, m: int = 32) -> list:
 	answer.extend(lpw[1:])
 	return answer
 
+
 def HPF(Fcut: float, dT: float, m: int = 32) -> list:
 	lpw = LPF(Fcut=Fcut, dT=dT, m=m)
 
@@ -140,6 +162,7 @@ def HPF(Fcut: float, dT: float, m: int = 32) -> list:
 	lpw[m] = 1 + lpw[m]
 
 	return lpw
+
 
 def BPF(Fcut1: float, Fcut2: float, dT: float, m: int = 32) -> list:
 	"""
@@ -158,6 +181,7 @@ def BPF(Fcut1: float, Fcut2: float, dT: float, m: int = 32) -> list:
 		lpw1[k] = lpw2[k] - lpw1[k]
 
 	return lpw1
+
 
 def BSF(Fcut1: float, Fcut2: float, dT: float, m: int = 32) -> list:
 	lpw1 = LPF(Fcut=Fcut1, dT=dT, m=m)
