@@ -2,9 +2,10 @@ import matplotlib.pyplot as plt
 
 axs = {}
 
-def init(figure_number=1, XKCD=False):
+def init(figure_number = 1, title = None, XKCD = False):
 	if XKCD is True: plt.xkcd()
-	plt.figure(figure_number)
+	fig = plt.figure(figure_number)
+	if title is not None: fig.suptitle(title)
 
 def set_subplot(subplot_number, y_arr, x_arr,
 				xmin=None, xmax=None, ymin=None, ymax=None,
