@@ -4,7 +4,11 @@ Some data preprocessing functions
 from analysis.statistics import mean, std
 import math
 import struct
+import numpy as np
+from numba import jit, float64, int64
 
+
+@jit
 def normalize(arr) -> None:
 	"""
 	Normalize data in given array
@@ -19,6 +23,7 @@ def normalize(arr) -> None:
 		arr[i] = (arr[i] - minX) / diff
 
 
+@jit
 def normalize_max(arr) -> None:
 	"""
 	Normalize data in given array to values from (-infinity; 1]. This algo scales data in such way that max positive values are 1
@@ -35,6 +40,7 @@ def normalize_max(arr) -> None:
 		arr[i] = arr[i] / maxX
 
 
+@jit
 def anti_shift(arr) -> None:
 	"""
 	Shift data to zero mean
@@ -46,6 +52,7 @@ def anti_shift(arr) -> None:
 		arr[i] -= m
 
 
+@jit
 def anti_spike(arr, K: int = 4) -> None:
 	"""
 	Delete spikes that are more than mean + K sigmas
@@ -65,6 +72,7 @@ def anti_spike(arr, K: int = 4) -> None:
 				arr[x] = (arr[x-1] + arr[x + 1]) / 2
 
 
+@jit
 def anti_trend(arr, window_width: int = None) -> None:
 	"""
 	Use floating window to remove trends from data
@@ -104,6 +112,7 @@ def bin2float(filepath: str, length: int) -> tuple:
 	return ans
 
 
+@jit(float64[:](float64, float64, int64))
 def LPF(Fcut: float, dT: float, m: int = 32) -> list:
 	"""
 	Low-Pass Filter realization
@@ -115,20 +124,25 @@ def LPF(Fcut: float, dT: float, m: int = 32) -> list:
 	"""
 
 	# Constant list of Potter 310 window
-	d = [0.35577019,
+	d = np.array(
+		[0.35577019,
 	     0.2436983,
 	     0.07211497,
-	     0.00630165]
+	     0.00630165],
+	dtype=np.double)
+
+	idxs = np.array([i for i in range(1, m + 1)])
 
 	# Create array
-	lpw = [0] * (m + 1)
+	lpw = np.array([0] * (m + 1), dtype=np.double)
 
 	# Some magic here
 	arg = 2 * Fcut * dT
 	lpw[0] = arg
-	arg *= math.pi
-	for i in range(1, m + 1):
-		lpw[i] = math.sin(arg * i) / (math.pi * i)
+	arg *= np.pi
+	lpw[1:] = np.divide(
+		np.sin(np.multiply(idxs, arg)),
+		np.multiply(idxs, np.pi))
 
 	# make trapezoid:
 	lpw[-1] /= 2
@@ -140,30 +154,31 @@ def LPF(Fcut: float, dT: float, m: int = 32) -> list:
 		arg = math.pi * i / m
 		for k in range(1, 4):
 			_sum += 2 * d[k] * math.cos(arg * k)
+
 		lpw[i] *= _sum
 		sumg += 2 * lpw[i]
 
 	# normalization
-	for i in range(m + 1):
-		lpw[i] /= sumg
+	lpw = np.divide(lpw, sumg)
 
 	# mirror related to 0
-	answer = lpw[::-1]
-	answer.extend(lpw[1:])
+	answer = lpw[::-1].tolist()
+	answer.extend(lpw[1:].tolist())
 	return answer
 
 
+@jit(float64(float64, float64, int64))
 def HPF(Fcut: float, dT: float, m: int = 32) -> list:
-	lpw = LPF(Fcut=Fcut, dT=dT, m=m)
+	lpw = np.array(LPF(Fcut=Fcut, dT=dT, m=m))
 
-	for k in range(len(lpw)):
-		lpw[k] *= -1
+	lpw = np.multiply(lpw, -1)
 
 	lpw[m] = 1 + lpw[m]
 
-	return lpw
+	return lpw.tolist()
 
 
+@jit(float64(float64, float64, float64, int64))
 def BPF(Fcut1: float, Fcut2: float, dT: float, m: int = 32) -> list:
 	"""
 	Band-pass filter
@@ -174,22 +189,21 @@ def BPF(Fcut1: float, Fcut2: float, dT: float, m: int = 32) -> list:
 	:param m:
 	:return:
 	"""
-	lpw1 = LPF(Fcut=Fcut1, dT=dT, m=m)
-	lpw2 = LPF(Fcut=Fcut2, dT=dT, m=m)
+	lpw1 = np.array(LPF(Fcut=Fcut1, dT=dT, m=m))
+	lpw2 = np.array(LPF(Fcut=Fcut2, dT=dT, m=m))
 
-	for k in range(len(lpw1)):
-		lpw1[k] = lpw2[k] - lpw1[k]
+	lpw = np.subtract(lpw2, lpw1)
 
-	return lpw1
+	return lpw.tolist()
 
 
+@jit(float64(float64, float64, float64, int64))
 def BSF(Fcut1: float, Fcut2: float, dT: float, m: int = 32) -> list:
-	lpw1 = LPF(Fcut=Fcut1, dT=dT, m=m)
-	lpw2 = LPF(Fcut=Fcut2, dT=dT, m=m)
+	lpw1 = np.array(LPF(Fcut=Fcut1, dT=dT, m=m))
+	lpw2 = np.array(LPF(Fcut=Fcut2, dT=dT, m=m))
 
-	for k in range(len(lpw1)):
-		lpw1[k] = lpw1[k] - lpw2[k]
+	lpw = np.subtract(lpw1, lpw2)
 
-	lpw1[m] += 1
+	lpw[m] += 1
 
-	return lpw1
+	return lpw.tolist()
