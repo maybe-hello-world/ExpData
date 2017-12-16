@@ -5,7 +5,9 @@ This module realize functions for array analysis like mean, square_mean, RMS etc
 Yeah, it's forbidden to use built-in functions
 """
 import math
+from numba import jit, int64, float64
 
+@jit(float64(float64[:]), parallel=True, nopython=True, nogil=True)
 def mean(arr) -> float:
 	"""
 	Returns average value of array
@@ -22,6 +24,8 @@ def mean(arr) -> float:
 		sm += i
 	return sm / len(arr)
 
+
+@jit(float64(float64[:]), parallel=True, nopython=True, nogil=True)
 def square_mean(arr) -> float:
 	"""
 	Returns squared mean (not mean^2, but sum of i^2)
@@ -35,6 +39,8 @@ def square_mean(arr) -> float:
 		sm += i**2
 	return sm / len(arr)
 
+
+@jit(float64(float64[:]), parallel=True, nopython=True, nogil=True)
 def root_mean_square(arr) -> float:
 	"""
 	Returns standard deviation of array
@@ -43,8 +49,10 @@ def root_mean_square(arr) -> float:
 	:param arr: array of values
 	:return: standard deviation of all values in array
 	"""
-	return math.sqrt(square_mean(arr))
+	return square_mean(arr) ** 0.5
 
+
+@jit(float64(float64[:]), parallel=True, nogil=True)
 def std(arr) -> float:
 	"""
 		Calculates standard deviation of values in array (also dispersion)
@@ -55,6 +63,8 @@ def std(arr) -> float:
 		"""
 	return variance(arr)
 
+
+@jit(float64(float64[:]), parallel=True, nogil=True)
 def variance(arr) -> float:
 	"""
 	Calculates dispersion of values in array (also standard deviation)
@@ -65,6 +75,8 @@ def variance(arr) -> float:
 	"""
 	return moment(arr, 2)
 
+
+@jit(float64(float64[:]), parallel=True, nogil=True)
 def sqrt_variance(arr) -> float:
 	"""
 	Calculates sqrt of variance of values in array
@@ -73,8 +85,10 @@ def sqrt_variance(arr) -> float:
 	:param arr: array of values
 	:return: square root of variance
 	"""
-	return math.sqrt(variance(arr))
+	return variance(arr) ** 0.5
 
+
+@jit(float64(float64[:], int64), parallel=True, nopython=True, nogil=True)
 def moment(arr, ordinal: int) -> float:
 	"""
 	Calculates ordinal moment of array
@@ -90,6 +104,8 @@ def moment(arr, ordinal: int) -> float:
 		d += (i - av) ** ordinal
 	return d / len(arr)
 
+
+@jit(float64(float64[:]), parallel=True, nogil=True)
 def skewness(arr) -> float:
 	"""
 	Calculates skewness (assymetry coeff) for values
@@ -100,6 +116,8 @@ def skewness(arr) -> float:
 	"""
 	return moment(arr, 3) / (sqrt_variance(arr) ** 3)
 
+
+@jit(float64(float64[:]), parallel=True, nogil=True)
 def kurtosis(arr) -> float:
 	"""
 	Calculates kurtosis (exscess coeff) for function's values
@@ -110,6 +128,8 @@ def kurtosis(arr) -> float:
 	"""
 	return moment(arr, 4) / (sqrt_variance(arr) ** 4)
 
+
+@jit
 def density(arr, M: int) -> list:
 	"""
 	Calculate probability density for array of values
@@ -136,17 +156,8 @@ def density(arr, M: int) -> list:
 	# Divide each element by arr length in order to get probability
 	return [i / len(arr) for i in ans]
 
-def autocorrelation(arr, lag: int) -> float:
-	"""
-	Calculates auto-correlation value for given lag for function f(x)
 
-	:rtype: float
-	:param arr: array of values
-	:param lag: lag for auto-correlation (value from 0 to N-1)
-	:return: auto-correlation value for given lag for values in array
-	"""
-	return crosscorrelation(arr, arr, lag)
-
+@jit(float64(float64[:], float64[:], int64), parallel=True, nopython=True, nogil=True)
 def crosscorrelation(arr_f, arr_g, lag: int) -> float:
 	"""
 	Calculates cross-correlation value for given lag for functions f(x) and g(y)
@@ -162,8 +173,34 @@ def crosscorrelation(arr_f, arr_g, lag: int) -> float:
 
 	avg_f = mean(arr_f)
 	avg_g = mean(arr_g)
+
+	sq_v_f = moment(arr_f, 2) ** 0.5
+	sq_v_g = moment(arr_g, 2) ** 0.5
 	lSum = 0
 	for i in range(0, len(arr_f) - lag - 1):
 		lSum += (arr_f[i] - avg_f) * (arr_g[i + lag] - avg_g)
 
-	return lSum / (len(arr_f) * sqrt_variance(arr_f) * sqrt_variance(arr_g))
+	return lSum / (len(arr_f) * sq_v_f * sq_v_g)
+
+
+@jit(float64(float64[:], int64), parallel=True, nopython=True, nogil=True)
+def autocorrelation(arr, lag: int) -> float:
+	"""
+	Calculates auto-correlation value for given lag for function f(x)
+
+	:rtype: float
+	:param arr: array of values
+	:param lag: lag for auto-correlation (value from 0 to N-1)
+	:return: auto-correlation value for given lag for values in array
+	"""
+	avg = mean(arr)
+	sq_v = moment(arr, 2) ** 0.5
+
+	lSum = 0
+	for i in range(0, len(arr) - lag - 1):
+		lSum += (arr[i] - avg) * (arr[i + lag] - avg)
+
+	return lSum / (len(arr) * sq_v * sq_v)
+
+
+
