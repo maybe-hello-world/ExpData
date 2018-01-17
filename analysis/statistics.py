@@ -181,7 +181,6 @@ def crosscorrelation(arr_f, arr_g, lag: int) -> float:
 	for i in range(0, len(arr_f) - lag - 1):
 		lSum += (arr_f[i] - avg_f) * (arr_g[i + lag] - avg_g)
 
-	print(lSum)
 	return lSum / ((len(arr_f) - lag) * sq_v_f * sq_v_g)
 
 
