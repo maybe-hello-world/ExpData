@@ -6,8 +6,9 @@ Yeah, it's forbidden to use built-in functions
 """
 import math
 from numba import jit, int64, float64
+from numba.types import List
 
-@jit(float64(float64[:]), parallel=True, nopython=True, nogil=True)
+@jit(parallel=True, nopython=True, nogil=True)
 def mean(arr) -> float:
 	"""
 	Returns average value of array
@@ -61,7 +62,7 @@ def std(arr) -> float:
 		:param arr: array of values
 		:return: dispersion value for the array
 		"""
-	return variance(arr)
+	return sqrt_variance(arr)
 
 
 @jit(float64(float64[:]), parallel=True, nogil=True)
@@ -88,7 +89,7 @@ def sqrt_variance(arr) -> float:
 	return variance(arr) ** 0.5
 
 
-@jit(float64(float64[:], int64), parallel=True, nopython=True, nogil=True)
+@jit(parallel=True, nopython=True, nogil=True)
 def moment(arr, ordinal: int) -> float:
 	"""
 	Calculates ordinal moment of array
@@ -157,7 +158,7 @@ def density(arr, M: int) -> list:
 	return [i / len(arr) for i in ans]
 
 
-@jit(float64(float64[:], float64[:], int64), parallel=True, nopython=True, nogil=True)
+# @jit(float64(float64[:], float64[:], int64), parallel=True, nopython=True, nogil=True)
 def crosscorrelation(arr_f, arr_g, lag: int) -> float:
 	"""
 	Calculates cross-correlation value for given lag for functions f(x) and g(y)
@@ -180,10 +181,11 @@ def crosscorrelation(arr_f, arr_g, lag: int) -> float:
 	for i in range(0, len(arr_f) - lag - 1):
 		lSum += (arr_f[i] - avg_f) * (arr_g[i + lag] - avg_g)
 
-	return lSum / (len(arr_f) * sq_v_f * sq_v_g)
+	print(lSum)
+	return lSum / ((len(arr_f) - lag) * sq_v_f * sq_v_g)
 
 
-@jit(float64(float64[:], int64), parallel=True, nopython=True, nogil=True)
+# @jit(parallel=True, nopython=True, nogil=True)
 def autocorrelation(arr, lag: int) -> float:
 	"""
 	Calculates auto-correlation value for given lag for function f(x)
@@ -200,7 +202,7 @@ def autocorrelation(arr, lag: int) -> float:
 	for i in range(0, len(arr) - lag - 1):
 		lSum += (arr[i] - avg) * (arr[i + lag] - avg)
 
-	return lSum / (len(arr) * sq_v * sq_v)
+	return lSum / ((len(arr) - lag) * sq_v * sq_v)
 
 
 
