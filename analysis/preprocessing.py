@@ -23,6 +23,58 @@ def normalize_image(image_data, depth, S = 255):
 	return modified_image
 
 
+def append_zeros(first_arr: np.ndarray, second_arr: np.ndarray) -> (np.ndarray, np.ndarray):
+	"""
+	Append zeros to one of arrays to make them length equal
+
+	:param first_arr: First array of data
+	:param second_arr: Second array of data
+	:return: None
+	"""
+	if len(first_arr) > len(second_arr):
+		zeros_number = len(first_arr) - len(second_arr)
+		second_arr = np.append(second_arr, ([0] * zeros_number))
+	else:
+		zeros_number = len(second_arr) - len(first_arr)
+		first_arr = np.append(first_arr, ([0] * zeros_number))
+	return first_arr, second_arr
+
+
+def make_complex(real_part, imag_part) -> np.ndarray:
+	"""
+	Make complex array from real and imaginary parts
+
+	:param real_part: Array of real parts
+	:param imag_part: Array of imaginary parts
+	:return: Array of complex numbers
+	"""
+
+	assert len(real_part) >= len(imag_part), "Check arrays sizes"
+	result = np.empty(len(real_part), dtype=complex)
+	result.real = real_part
+	result.imag = imag_part
+
+	return result
+
+def divide_complex(real_A, img_A, real_B, img_B) -> np.ndarray:
+	"""
+	Implement complex division of al elements in array
+
+	:param real_A: Array of real values
+	:param img_A: Array of img values
+	:param real_B: Array of real values
+	:param img_B: Array of img values
+	:return: Resulting array
+	"""
+
+	assert len(real_A) == len(real_B), "Lengths of array are different"
+
+	arrA = make_complex(real_A, img_A)
+	arrB = make_complex(real_B, img_B)
+
+	return np.divide(arrA, arrB)
+
+
 @jit
 def normalize(arr) -> None:
 	"""
