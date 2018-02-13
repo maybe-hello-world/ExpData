@@ -1,8 +1,9 @@
 import matplotlib.pyplot as plt
+from PIL import Image
 
 axs = {}
 
-def init(figure_number = 1, title = None, XKCD = False):
+def init(figure_number = 1, title = None, XKCD = False) -> None:
 	if XKCD is True: plt.xkcd()
 	fig = plt.figure(figure_number)
 	if title is not None: fig.suptitle(title)
@@ -12,7 +13,7 @@ def set_subplot(subplot_number, y_arr, x_arr,
 				grid=True, subplot_x_number=2, subplot_y_number=2,
 				xlabel = None, ylabel = None, title = None,
 				xticks = None, yticks = None,
-				annotations = None, bar = False):
+				annotations = None, bar = False) -> None:
 	"""
 	Define subplot in graph
 
@@ -61,5 +62,8 @@ def set_subplot(subplot_number, y_arr, x_arr,
 		plt.grid(grid)
 
 
-def show():
+def set_image_gray(image_array) -> None:
+	plt.imshow(image_array, cmap='gray')
+
+def show() -> None:
 	plt.show()

@@ -3,9 +3,24 @@ Some data preprocessing functions
 """
 from analysis.statistics import mean, std
 import math
-import struct
 import numpy as np
 from numba import jit, float64, int64
+
+
+def normalize_image(image_data, depth, S = 255):
+	"""
+	Normalize image with given image depth to desired color depth
+
+	:param image_data: Image array
+	:param depth: Color depth of image
+	:param S: Desired color depth
+	:return: Normalized to new color depth image
+	"""
+	maxX = 1 << depth
+	temp = np.divide(image_data, maxX)
+	modified_image = np.multiply(temp, S).astype(int)
+
+	return modified_image
 
 
 @jit
@@ -58,13 +73,13 @@ def anti_spike(arr, K: int = 4) -> None:
 	Delete spikes that are more than mean + K sigmas
 
 	:param arr: array of data with spikes
-	:param K: sigma multiplicator (lesser K - lesser border value for spike detecor - smoother output)
+	:param K: sigma multiplicator (lesser K - lesser border value for spike detector - smoother output)
 	"""
 	avg = mean(arr)
 	sigma = std(arr)
 	for x in range(len(arr)):
 		if math.fabs(arr[x]) > avg + K * sigma:
-			if x == 0:
+			if 0 < x < len(arr) - 1:
 				arr[x] = (arr[x + 1] + arr[x + 2]) / 2
 			elif x == len(arr) - 1:
 				arr[x] = (arr[x - 2] + arr[x - 1]) / 2
@@ -73,46 +88,34 @@ def anti_spike(arr, K: int = 4) -> None:
 
 
 @jit
-def anti_trend(arr, window_width: int = None) -> None:
+def anti_trend(arr, window_width: int = None) -> list:
 	"""
 	Use floating window to remove trends from data
 
 	:param arr: array of values
 	:param window_width: width of window
 	"""
+	trend = []
 	if window_width is None :
 		window_width = int(len(arr) / 100)
 
 	counter = int(math.floor(len(arr) / window_width))
 	for i in range(counter):
 		mean_v = mean(arr[i * window_width : (i + 1) * window_width])
+		trend.append(mean_v)
 		for x in range(window_width):
 			arr[i * window_width + x] -= mean_v
 
 	# Resize last values
-	if window_width * counter == len(arr):
-		return
+	if window_width * counter != len(arr):
+		mean_v = mean(arr[window_width * counter:])
+		trend.append(mean_v)
+		for x in range(window_width * counter, len(arr)):
+			arr[x] -= mean_v
 
-	mean_v = mean(arr[window_width * counter:])
-	for x in range(window_width * counter, len(arr)):
-		arr[x] -= mean_v
-
-
-def bin2float(filepath: str, length: int) -> tuple:
-	"""
-	Read (length) floats from raw byte file and return tuple of them
-
-	:param filepath: path to binary file
-	:param length: number of floats inside (each float is 32-bit number)
-	:return: tuple with floats
-	"""
-	with open(filepath, 'rb') as f:
-		ans = struct.unpack(str(length) + "f", f.read())
-
-	return ans
+	return trend
 
 
-@jit(float64[:](float64, float64, int64))
 def LPF(Fcut: float, dT: float, m: int = 32) -> list:
 	"""
 	Low-Pass Filter realization
@@ -178,7 +181,6 @@ def HPF(Fcut: float, dT: float, m: int = 32) -> list:
 	return lpw.tolist()
 
 
-@jit(float64(float64, float64, float64, int64))
 def BPF(Fcut1: float, Fcut2: float, dT: float, m: int = 32) -> list:
 	"""
 	Band-pass filter

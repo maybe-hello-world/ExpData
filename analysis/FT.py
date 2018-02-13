@@ -21,6 +21,7 @@ class FT_result:
 	frequencies: list
 	Re: list
 	Im: list
+	H: list
 	deltaF: float64
 	borderF: float64
 
@@ -47,12 +48,20 @@ def fourier_transform(arr, deltaT: float) -> FT_result:
 		Res[n], Ims[n], Cs[n] = __FT_step(n, t_arr)
 
 	res.Re = Res.tolist()
-	res.Ims = Ims.tolist()
+	res.Im = Ims.tolist()
+	res.H = np.add(res.Re, res.Im)
 	res.frequencies = Cs.tolist()
 	res.borderF = __calculate_borderF(deltaT)
 	res.deltaF = __calculate_deltaF(res.borderF, N)
 
 	return res
+
+def reverse_fourier_transform(arr, deltaT: float) -> list:
+	N = len(arr)
+	res = fourier_transform(arr, deltaT)
+	answer = np.multiply(res.H, N)
+
+	return answer
 
 @jit(parallel=True)
 def __FT_step(n: int, arr: np.ndarray) -> (float, float, float):
