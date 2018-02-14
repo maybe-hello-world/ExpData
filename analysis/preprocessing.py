@@ -7,7 +7,7 @@ import numpy as np
 from numba import jit, float64, int64
 
 
-def normalize_image(image_data, depth, S = 255):
+def normalize_image(image_data: np.ndarray, depth, S = 255):
 	"""
 	Normalize image with given image depth to desired color depth
 
@@ -16,8 +16,9 @@ def normalize_image(image_data, depth, S = 255):
 	:param S: Desired color depth
 	:return: Normalized to new color depth image
 	"""
-	maxX = 1 << depth
-	temp = np.divide(image_data, maxX)
+	maxX = max(image_data.flat)
+	minX = min(image_data.flat)
+	temp = np.divide(image_data - minX, maxX - minX)
 	modified_image = np.multiply(temp, S).astype(int)
 
 	return modified_image

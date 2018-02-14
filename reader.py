@@ -32,9 +32,16 @@ def xcr_reader(filepath: str) -> (int, int, int, np.ndarray):
 
 	depth = 16
 
-	image_data = struct.unpack(str(image_len) + "H", data[2048:(2048 + image_len*2)])
+	image_data = list(data[2048:(2048 + image_len*2)])
+
+	for i in range(0, len(image_data), 2):
+		image_data[i], image_data[i+1] = image_data[i+1], image_data[i]
+
+	image_data = list(struct.unpack(str(image_len) + "H", bytes(image_data)))
 	image_data = np.array(image_data).reshape((col_num, row_num))
+
 	image_data = np.flipud(image_data)
+	# image_data = np.fliplr(image_data)
 	return col_num, row_num, depth, image_data
 
 
