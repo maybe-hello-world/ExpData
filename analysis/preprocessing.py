@@ -1,25 +1,118 @@
 """
 Some data preprocessing functions
 """
-from analysis.statistics import mean, std
+from analysis.statistics import mean, std, histogramm, cumulative_sum
 import math
 import numpy as np
+from scipy.misc import imresize
 from numba import jit, float64, int64
 
 
-def normalize_image(image_data: np.ndarray, depth, S = 255):
+
+# негатив
+# гамма-коррекция
+# логарифмическое преобразование
+# Попытаться улучшить качество остальных 3х изображений
+
+def negative_image(image_data: np.ndarray, depth: int = 8) -> np.ndarray:
+	return (1 << depth - 1) - image_data
+
+
+def log_correction_image(image_data: np.ndarray, C: float, depth: int = 8) -> np.ndarray:
+	temp = np.add(1,image_data, dtype=np.int64)
+	result = np.log(temp) * C
+	return normalize_image(result, 1 << depth - 1, dtype=image_data.dtype)
+
+def gamma_correction_image(image_data: np.ndarray, C: float, gamma: float, depth: int = 8) -> np.ndarray:
+	result = np.power(image_data, gamma) * C
+	return normalize_image(result, 1 << depth - 1, dtype=image_data.dtype)
+
+
+def resize_image(image_data: np.ndarray, k1, k2, method = "knn") -> np.ndarray:
+	result = np.empty((int(image_data.shape[0] * k1), int(image_data.shape[1] * k2), 3), dtype=image_data.dtype)
+
+	if method == "knn":
+		for i in range(result.shape[0]):
+			for j in range(result.shape[1]):
+				result[i][j] = image_data[int(i/k1)][int(j/k2)]
+	elif method == "bilinear":
+		result = imresize(arr=image_data, size=result.shape, interp="bilinear", mode="RGB")
+	else:
+		raise ValueError("method isn't supported")
+
+	return result
+
+def histeq(image_data: np.ndarray, depth: int = 8) -> np.ndarray:
+
+	h = histogramm(image_data, depth)
+	cdf = cumulative_sum(h)
+	l = (1 << depth) - 1
+	if depth <= 8:
+		sk = np.uint8(l * cdf)
+	elif depth <= 16:
+		sk = np.uint16(l * cdf)
+	elif depth <= 32:
+		sk = np.uint32(l * cdf)
+	else:
+		sk = np.uint128(l * cdf)
+
+	s1, s2 = image_data.shape[0], image_data.shape[1]
+	Y = np.zeros_like(image_data)
+	for i in range(s1):
+		for j in range(s2):
+			Y[i, j] = sk[image_data[i, j]]
+
+	return Y
+
+
+def hist_match(source: np.ndarray, template: np.ndarray) -> np.ndarray:
+	oldshape = source.shape
+
+	if len(oldshape) > 3 or len(oldshape) < 2:
+		raise ValueError(oldshape, "= oldshape")
+	elif len(oldshape) == 2:
+		source = np.expand_dims(source, axis=-1)
+		oldshape = (oldshape[0], oldshape[1], 1)
+
+	data = []
+	for channel in range(oldshape[2]):
+		source_local = source[:, :, channel].ravel()
+		template_local = template[:, :, channel].ravel()
+
+		s_values, bin_idx, s_counts = np.unique(source_local, return_inverse=True,
+		                                        return_counts=True)
+		t_values, t_counts = np.unique(template_local, return_counts=True)
+
+		s_quantiles = np.cumsum(s_counts).astype(np.float64)
+		s_quantiles /= s_quantiles[-1]
+		t_quantiles = np.cumsum(t_counts).astype(np.float64)
+		t_quantiles /= t_quantiles[-1]
+
+		interp_t_values = np.interp(s_quantiles, t_quantiles, t_values)
+
+		channel_data = interp_t_values[bin_idx].reshape((oldshape[0], oldshape[1]))
+		data.append(channel_data)
+
+	data = np.stack(data, axis=2).astype(dtype=source.dtype)
+	return data
+
+
+def normalize_image(image_data: np.ndarray, S = 255, dtype = None):
 	"""
 	Normalize image with given image depth to desired color depth
 
 	:param image_data: Image array
-	:param depth: Color depth of image
+	:param dtype: Type of data
 	:param S: Desired color depth
 	:return: Normalized to new color depth image
 	"""
+
+	if dtype is None:
+		dtype = image_data.dtype
 	maxX = max(image_data.flat)
 	minX = min(image_data.flat)
 	temp = np.divide(image_data - minX, maxX - minX)
-	modified_image = np.multiply(temp, S).astype(int)
+	modified_image = np.multiply(temp, S).astype(dtype)
 
 	return modified_image
 
