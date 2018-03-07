@@ -1,19 +1,15 @@
 import matplotlib.pyplot as plt
-from PIL import Image
+from numpy import ndarray
 
 axs = {}
-
-def init(figure_number = 1, title = None, XKCD = False) -> None:
-	if XKCD is True: plt.xkcd()
-	fig = plt.figure(figure_number)
-	if title is not None: fig.suptitle(title)
 
 def set_subplot(subplot_number, y_arr, x_arr,
 				xmin=None, xmax=None, ymin=None, ymax=None,
 				grid=True, subplot_x_number=2, subplot_y_number=2,
 				xlabel = None, ylabel = None, title = None,
 				xticks = None, yticks = None,
-				annotations = None, bar = False) -> None:
+				annotations = None, bar = False,
+				figure_number=None, global_title=None, XKCD=False) -> None:
 	"""
 	Define subplot in graph
 
@@ -41,6 +37,10 @@ def set_subplot(subplot_number, y_arr, x_arr,
 	"""
 	global axs
 
+	if XKCD is True: plt.xkcd()
+	fig = plt.figure(figure_number)
+	if global_title is not None: fig.suptitle(global_title)
+
 	axs[subplot_number - 1] = plt.subplot(subplot_x_number, subplot_y_number, subplot_number)
 
 	if xmin is not None and xmax is not None: axs[subplot_number - 1].set_xlim([xmin, xmax])
@@ -62,8 +62,10 @@ def set_subplot(subplot_number, y_arr, x_arr,
 		plt.grid(grid)
 
 
-def set_image_gray(image_array) -> None:
-	plt.imshow(image_array, cmap='gray')
+def set_image(image_array: ndarray, title=None) -> None:
+	fig = plt.figure()
+	plt.imshow(image_array, aspect="auto", interpolation="none")
+	if title is not None: fig.suptitle(title)
 
 def show() -> None:
 	plt.show()
