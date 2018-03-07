@@ -3,3 +3,4 @@ __pycache__/
 main.py
 .ipynb_checkpoints
 temp.py
+data/
