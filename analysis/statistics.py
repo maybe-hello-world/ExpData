@@ -7,6 +7,19 @@ Yeah, it's forbidden to use built-in functions
 import math
 from numba import jit, int64, float64
 from numba.types import List
+import numpy as np
+
+def histogramm(arr, depth: int = 8) -> np.ndarray:
+	m, n = len(arr), len(arr[0])
+	hst = np.zeros(shape=(1 << depth,), dtype=np.int64)
+	for row in arr:
+		for cell in row:
+			hst[int(mean(cell))] += 1
+
+	return hst / (m * n)
+
+def cumulative_sum(h: np.ndarray) -> np.ndarray:
+	return np.array([sum(h[:i+1]) for i in range(len(h))])
 
 @jit(parallel=True, nopython=True, nogil=True)
 def mean(arr) -> float:
