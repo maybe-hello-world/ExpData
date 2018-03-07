@@ -59,7 +59,17 @@ def jpg_reader(filepath: str) -> (int, int, int, np.ndarray):
 
 	depth = jpgfile.bits
 
-	image_data = list(jpgfile.getdata())
-	image_data = np.array(image_data).reshape((col_num, row_num))
+	image_data = np.array(jpgfile.getdata(), dtype=np.ubyte)
+
+	channels = len(image_data.flat) / row_num / col_num
+	if channels // 1 != channels:
+		raise ValueError("Inconsistent data: can't divide into channels")
+	channels = int(channels)
+
+	if channels == 1:
+		image_data = image_data.reshape((row_num, col_num))
+		image_data = np.stack((image_data,) * 3, -1)
+	else:
+		image_data = image_data.reshape((row_num, col_num, channels))
 
 	return col_num, row_num, depth, image_data
