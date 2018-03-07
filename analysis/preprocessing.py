@@ -15,13 +15,14 @@ from numba import jit, float64, int64
 # Попытаться улучшить качество остальных 3х изображений
 
 def negative_image(image_data: np.ndarray, depth: int = 8) -> np.ndarray:
-	return (1 << depth - 1) - image_data
+	return ((1 << depth) - 1) - image_data
 
 
 def log_correction_image(image_data: np.ndarray, C: float, depth: int = 8) -> np.ndarray:
 	temp = np.add(1,image_data, dtype=np.int64)
 	result = np.log(temp) * C
 	return normalize_image(result, 1 << depth - 1, dtype=image_data.dtype)
+
 
 def gamma_correction_image(image_data: np.ndarray, C: float, gamma: float, depth: int = 8) -> np.ndarray:
 	result = np.power(image_data, gamma) * C
@@ -41,6 +42,7 @@ def resize_image(image_data: np.ndarray, k1, k2, method = "knn") -> np.ndarray:
 		raise ValueError("method isn't supported")
 
 	return result
+
 
 def histeq(image_data: np.ndarray, depth: int = 8) -> np.ndarray:
 
@@ -74,14 +76,15 @@ def hist_match(source: np.ndarray, template: np.ndarray) -> np.ndarray:
 		source = np.expand_dims(source, axis=-1)
 		oldshape = (oldshape[0], oldshape[1], 1)
 
+	template = template.ravel()
 	data = []
 	for channel in range(oldshape[2]):
 		source_local = source[:, :, channel].ravel()
-		template_local = template[:, :, channel].ravel()
+
 
 		s_values, bin_idx, s_counts = np.unique(source_local, return_inverse=True,
 		                                        return_counts=True)
-		t_values, t_counts = np.unique(template_local, return_counts=True)
+		t_values, t_counts = np.unique(template, return_counts=True)
 
 		s_quantiles = np.cumsum(s_counts).astype(np.float64)
 		s_quantiles /= s_quantiles[-1]
