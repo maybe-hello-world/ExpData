@@ -6,13 +6,58 @@ import math
 import numpy as np
 from scipy.misc import imresize
 from numba import jit, float64, int64
+from reader import bin2float
+from analysis import FT
 
 
 
-# негатив
-# гамма-коррекция
-# логарифмическое преобразование
-# Попытаться улучшить качество остальных 3х изображений
+def restore_image(
+		path: str, width: int, height: int,
+		kernel_path: str, kernel_length: int,
+		blurred: bool = False, a: float = 0.1) -> np.ndarray:
+
+	# load kernel func
+	h_func = bin2float(kernel_path, kernel_length)
+	h_func = list(h_func)
+	h_func.extend([0] * (width - kernel_length))
+	h_func = np.array(h_func)
+
+	# get spectre
+	h_func_FT = FT.fourier_transform(h_func, 1)
+	h_func_FT = make_complex(h_func_FT.Re, h_func_FT.Im)
+
+	# Load image
+	blur_229 = bin2float(path, width * height)
+	blur_229 = np.array(blur_229).reshape((height, width))
+
+	# Get image spectre
+	blur_229_FT = np.empty_like(blur_229, dtype=np.complex)
+	i = 0
+	for x in blur_229[:, :]:
+		line = FT.fourier_transform(x, 1)
+		line = make_complex(line.Re, line.Im)
+		blur_229_FT[i, :] = line
+		i += 1
+
+	if not blurred:
+		for row in range(blur_229_FT.shape[0]):
+			blur_229_FT[row, :] /= h_func_FT
+	else:
+		for row in range(blur_229_FT.shape[0]):
+			div = blur_229_FT[row, :] * np.conjugate(h_func_FT)
+			blur_229_FT[row, :] = div / (np.absolute(h_func_FT) ** 2 + a ** 2)
+
+	blur_229_restored = np.empty_like(blur_229)
+	for x in range(blur_229.shape[0]):
+		line = blur_229_FT[x, :]
+		new_line = []
+		for i in line:
+			new_line.append(i.real + i.imag)
+		blur_229_restored[x, :] = FT.reverse_fourier_transform(np.array(new_line), 1)
+
+	return blur_229_restored
+
+
 
 def negative_image(image_data: np.ndarray, depth: int = 8) -> np.ndarray:
 	return ((1 << depth) - 1) - image_data
@@ -152,6 +197,7 @@ def make_complex(real_part, imag_part) -> np.ndarray:
 	result.imag = imag_part
 
 	return result
+
 
 def divide_complex(real_A, img_A, real_B, img_B) -> np.ndarray:
 	"""
