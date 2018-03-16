@@ -21,7 +21,7 @@ def xcr_reader(filepath: str) -> (int, int, int, np.ndarray):
 	Read XCR image
 
 	:param filepath: path to XCR file
-	:return: (columns_number, rows_number, image_array)
+	:return: (columns_number, rows_number, depth, image_array)
 	"""
 	with open(filepath, 'rb') as f:
 		data = f.read()

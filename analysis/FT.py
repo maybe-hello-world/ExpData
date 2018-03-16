@@ -14,6 +14,7 @@ class FT_result:
 		frequencies     Values of frequencies
 		Re              Values of real part (cosinus basis)
 		Im              Values of imaginary part (sinus basis)
+		H:              Values of Re + Im parts
 		deltaF          Multiplicator for x axis for frequencies
 		borderF         Maximum frequency that can be found
 	"""
@@ -57,11 +58,11 @@ def fourier_transform(arr, deltaT: float) -> FT_result:
 	return res
 
 def reverse_fourier_transform(arr, deltaT: float) -> list:
-	N = len(arr)
-	res = fourier_transform(arr, deltaT)
-	answer = np.multiply(res.H, N)
+	N: int = len(arr)
+	res: FT_result = fourier_transform(arr, deltaT)
+	answer: np.ndarray = np.multiply(res.H, N)
 
-	return answer
+	return list(answer.tolist())
 
 @jit(parallel=True)
 def __FT_step(n: int, arr: np.ndarray) -> (float, float, float):
@@ -75,6 +76,10 @@ def __FT_step(n: int, arr: np.ndarray) -> (float, float, float):
 	N = len(arr)
 
 	idxs = np.array([i for i in range(N)])
+
+# TODO: change to complex
+# result.Re = result.Re + tempArr[i].Re * Math.Cos((2 * Math.PI * k * i) / N) - tempArr[i].Im * Math.Sin((2 * Math.PI * k * i) / N);
+# result.Im = result.Im + tempArr[i].Re * Math.Sin((2 * Math.PI * k * i) / N) - tempArr[i].Im * Math.Cos((2 * Math.PI * k * i) / N);
 
 	Re = np.divide(
 		np.sum(arr * np.cos(2 * np.pi * n * idxs / N)),
