@@ -16,32 +16,34 @@ def bin2float(filepath: str, length: int) -> tuple:
 	return ans
 
 
-def xcr_reader(filepath: str) -> (int, int, int, np.ndarray):
+def xcr_reader(filepath: str, col_num: int, row_num: int, offset: int = 0, reversed: bool = False) -> (int, int, int, np.ndarray):
 	"""
 	Read XCR image
 
 	:param filepath: path to XCR file
+	:param col_num: number of columns in img
+	:param row_num: number of rows in img
+	:param offset: offset from begin (for header)
+	:param reversed: if bytes are reversed in image
 	:return: (columns_number, rows_number, depth, image_array)
 	"""
 	with open(filepath, 'rb') as f:
 		data = f.read()
 
-	col_num = int(data[608:624].decode('utf-8').partition('\0')[0])
-	row_num = int(data[624:640].decode('utf-8').partition('\0')[0])
 	image_len = col_num * row_num
 
 	depth = 16
 
-	image_data = list(data[2048:(2048 + image_len*2)])
+	image_data = list(data[offset:(offset + image_len*2)])
 
-	for i in range(0, len(image_data), 2):
-		image_data[i], image_data[i+1] = image_data[i+1], image_data[i]
+	if reversed:
+		for i in range(0, len(image_data), 2):
+			image_data[i], image_data[i+1] = image_data[i+1], image_data[i]
 
 	image_data = list(struct.unpack(str(image_len) + "H", bytes(image_data)))
 	image_data = np.array(image_data).reshape((col_num, row_num))
 
 	image_data = np.flipud(image_data)
-	# image_data = np.fliplr(image_data)
 	return col_num, row_num, depth, image_data
 
 
