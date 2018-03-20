@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from numpy import ndarray
+from analysis.preprocessing import normalize_image
 
 axs = {}
 
@@ -62,9 +63,11 @@ def set_subplot(subplot_number, y_arr, x_arr,
 		plt.grid(grid)
 
 
-def set_image(image_array: ndarray, title=None) -> None:
+def set_image(image_array: ndarray, title=None, cmap=None, normalize=True) -> None:
 	fig = plt.figure()
-	plt.imshow(image_array, aspect="auto", interpolation="none")
+	if normalize:
+		image_array = normalize_image(image_array)
+	plt.imshow(image_array, aspect="auto", interpolation="none", cmap=cmap)
 	if title is not None: fig.suptitle(title)
 
 def show() -> None:
