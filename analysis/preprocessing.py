@@ -11,9 +11,12 @@ from analysis import FT, impulse_response
 from analysis.statistics import autocorrelation
 
 
-def remove_periodic(image_data: np.ndarray, col_nums: int, row_nums: int, turn: bool = False):
+def remove_periodic(image_data: np.ndarray, turn: bool = False, level: int = 32):
+	if turn:
+		image_data = np.rot90(image_data)
+
 	# find peak
-	N = row_nums // 2
+	N = image_data.shape[0] // 2
 	derivative = [image_data[N, i + 1] - image_data[N, i] for i in range(len(image_data[N]) - 1)]
 	ac = [autocorrelation(derivative, i) for i in range(len(derivative))]
 	res = FT.fourier_transform(ac, 1)
@@ -24,12 +27,14 @@ def remove_periodic(image_data: np.ndarray, col_nums: int, row_nums: int, turn: 
 	leftBorder, rightBorder = min(peaks), max(peaks)
 
 	# apply filter
-	m = 32
-	bsfilter = BSF(leftBorder, rightBorder, 1, m)
+	bsfilter = BSF(leftBorder, rightBorder, 1, level)
 	new_image = np.empty_like(image_data)
 	for i in range(len(image_data)):
 		row = impulse_response.process(image_data[i], bsfilter)
-		new_image[i] = row[m:-m - 1]
+		new_image[i] = row[level:-level - 1]
+
+	if turn:
+		new_image = np.rot90(new_image, -1)
 
 	return new_image
 
