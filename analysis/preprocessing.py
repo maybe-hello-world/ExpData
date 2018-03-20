@@ -11,7 +11,7 @@ from analysis import FT, impulse_response
 from analysis.statistics import autocorrelation
 
 
-def remove_periodic(image_data: np.ndarray, turn: bool = False, level: int = 32):
+def remove_periodic(image_data: np.ndarray, turn: bool = False, level: int = 32, sqv_mod: float = 1/4):
 	if turn:
 		image_data = np.rot90(image_data)
 
@@ -23,7 +23,7 @@ def remove_periodic(image_data: np.ndarray, turn: bool = False, level: int = 32)
 	d = res.frequencies[:len(res.frequencies) // 2]
 	m = mean(d)
 	sqv = sqrt_variance(d)
-	peaks = [i * res.deltaF for i in range(len(d)) if d[i] > m + sqv / 4]
+	peaks = [i * res.deltaF for i in range(len(d)) if d[i] > m + sqv * sqv_mod]
 	leftBorder, rightBorder = min(peaks), max(peaks)
 
 	# apply filter
