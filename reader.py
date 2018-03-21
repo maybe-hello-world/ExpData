@@ -47,13 +47,15 @@ def xcr_reader(filepath: str, col_num: int, row_num: int, offset: int = 0, rever
 	return col_num, row_num, depth, image_data
 
 
-def jpg_reader(filepath: str) -> (int, int, int, np.ndarray):
+def jpg_reader(filepath: str, channels: int = 3) -> (int, int, int, np.ndarray):
 	"""
 	Read JPG files
 
 	:param filepath: path to JPG file
-	:return: (columns_number, rows_number, image_array)
+	:return: (columns_number, rows_number, depth, image_array)
 	"""
+	assert channels == 1 or channels == 3, "Channels number must be 1 or 3"
+
 	jpgfile = Image.open(filepath)
 
 	col_num = jpgfile.width
@@ -63,15 +65,24 @@ def jpg_reader(filepath: str) -> (int, int, int, np.ndarray):
 
 	image_data = np.array(jpgfile.getdata(), dtype=np.ubyte)
 
-	channels = len(image_data.flat) / row_num / col_num
-	if channels // 1 != channels:
+	cur_channels = len(image_data.flat) / row_num / col_num
+	if cur_channels // 1 != cur_channels:
 		raise ValueError("Inconsistent data: can't divide into channels")
-	channels = int(channels)
+	cur_channels = int(cur_channels)
 
-	if channels == 1:
-		image_data = image_data.reshape((row_num, col_num))
-		image_data = np.stack((image_data,) * 3, -1)
+	# TODO: Refactor
+	if channels == 3:
+		if cur_channels == 1:
+			image_data = image_data.reshape((row_num, col_num))
+			image_data = np.stack((image_data,) * 3, -1)
+		else:
+			image_data = image_data.reshape((row_num, col_num, cur_channels))
 	else:
-		image_data = image_data.reshape((row_num, col_num, channels))
+		if cur_channels != 1:
+			image_data2 = np.empty(shape=(image_data.shape[0], image_data.shape[1]))
+			for i in range(len(image_data)):
+				image_data2[i, :] = image_data[i, :, 0]
+		else:
+			image_data = image_data.reshape((row_num, col_num))
 
 	return col_num, row_num, depth, image_data
