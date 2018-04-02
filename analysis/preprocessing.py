@@ -11,6 +11,42 @@ from analysis import FT, impulse_response
 from analysis.statistics import autocorrelation
 
 
+def convolution2d(array: np.ndarray, kernel: np.ndarray, expand_borders: bool = True):
+	m, n = kernel.shape
+	if m != n:
+		raise NotImplementedError("Square kernel shape is supported only")
+	if m % 2 != 1:
+		raise NotImplementedError("Only odd kernels are allowed (1x1, 3x3, 5x5 etc)")
+	y, x = array.shape
+
+	m2 = m // 2
+	#expand dims of old image
+	exp_y = y + m - 1
+	exp_x = x + m - 1
+	expanded_array = np.zeros((exp_y, exp_x), dtype=array.dtype)
+	expanded_array[m2:-m2, m2:-m2] = array
+
+
+	new_image = np.empty_like(array)
+	for i in range(y):
+		for j in range(x):
+			new_image[i][j] = np.sum(expanded_array[i:(i + m), j:(j + m)] * kernel)
+	return new_image
+
+
+def step_function(image_data: np.ndarray, step_lower: int = 128, step_higher: int = 128, depth: int = 8) -> np.ndarray:
+	ans: np.ndarray = np.copy(image_data).astype(image_data.dtype)
+	def step_f(x):
+		if x < step_lower:
+			x = 0
+		elif x >= step_higher:
+			x = (1 << depth) - 1
+		return x
+	step_f = np.vectorize(step_f)
+	ans = step_f(ans)
+	return ans.astype(image_data.dtype)
+
+
 def remove_periodic(image_data: np.ndarray, turn: bool = False, level: int = 32, sqv_mod: float = 1/4):
 	if turn:
 		image_data = np.rot90(image_data)
