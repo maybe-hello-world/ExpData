@@ -79,9 +79,11 @@ def jpg_reader(filepath: str, channels: int = 3) -> (int, int, int, np.ndarray):
 			image_data = image_data.reshape((row_num, col_num, cur_channels))
 	else:
 		if cur_channels != 1:
+			image_data = image_data.reshape((row_num, col_num, cur_channels))
 			image_data2 = np.empty(shape=(image_data.shape[0], image_data.shape[1]))
 			for i in range(len(image_data)):
 				image_data2[i, :] = image_data[i, :, 0]
+			image_data = image_data2
 		else:
 			image_data = image_data.reshape((row_num, col_num))
 
