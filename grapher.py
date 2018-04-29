@@ -67,7 +67,7 @@ def set_image(image_array: ndarray, title=None, cmap=None, normalize=True) -> No
 	fig = plt.figure()
 	if normalize:
 		image_array = normalize_image(image_array)
-	plt.imshow(image_array, aspect="auto", interpolation="none", cmap=cmap)
+	plt.imshow(image_array, aspect="auto", interpolation="none", cmap=cmap, vmin=0, vmax=255)
 	if title is not None: fig.suptitle(title)
 
 def show() -> None:
