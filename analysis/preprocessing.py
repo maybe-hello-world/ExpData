@@ -11,6 +11,35 @@ from analysis import FT, impulse_response
 from analysis.statistics import autocorrelation
 
 
+def apply_under_matrix(array: np.ndarray, matrix_size: int,
+                       activation_function, applying_function) -> np.ndarray:
+	
+	if matrix_size % 2 != 1:
+		raise NotImplementedError("Only odd kernels are allowed (1x1, 3x3, 5x5 etc)")
+	y, x = array.shape
+
+	m2 = matrix_size // 2
+	new_image = np.copy(array)
+	for i in range(m2, y - m2):
+		for j in range(m2, x - m2):
+			if activation_function(array[i][j]):
+				new_image[(i - m2):(i + m2 + 1), (j - m2):(j + m2 + 1)] = applying_function(array[(i - m2):(i + m2 + 1), (j - m2):(j + m2 + 1)])
+	return new_image
+
+	
+def add_noise(data: np.ndarray, type: str, sparsity: float = 0.1, random_size=30) -> np.ndarray:
+	if type == "random":
+		__noise = lambda x: x if np.random.rand(1) > sparsity else x + np.random.choice([-1, 1]) * np.random.randint(1, random_size)
+	elif type == "s&p":
+		__noise = lambda x: x if np.random.rand(1) > sparsity else np.random.choice([0, 255])
+	else:
+		raise ValueError("Unknown noise type, available types: random, s&p")
+	__noise = np.vectorize(__noise)
+	data = __noise(data)
+	data = step_function(data, 0, 255, 8)
+	return data
+	
+	
 def convolution2d(array: np.ndarray, kernel: np.ndarray, expand_borders: bool = True):
 	m, n = kernel.shape
 	if m != n:
